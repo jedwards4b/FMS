@@ -59,9 +59,11 @@ def buildlib(bldroot, installpath, caseroot):
         gmake_opts = "-f {} ".format(os.path.join(fms_dir,"Makefile.cesm"))
         gmake_opts += " -C {} ".format(installpath)
         gmake_opts += "CASEROOT={} ".format(caseroot)
-        gmake_opts += "USER_INCLDIR=\"-I{} -I{}\"".format(os.path.join(fms_dir,"include"),os.path.join(fms_dir,"mpp","include"))
+        gmake_opts += "USER_INCLDIR=\"-I{} -I{} -I{}\"".format(os.path.join(fms_dir,"include"),
+                                                               os.path.join(fms_dir,"mpp","include"), os.path.join(bldroot,"FMS"))
+                                                               
         gmake_opts += " COMPLIB=libfms.a "
-
+        
         gmake_cmd = case.get_value("GMAKE")
 
         # This runs the FMS build

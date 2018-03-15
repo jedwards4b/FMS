@@ -63,7 +63,7 @@ endif
 # set CPP options (must use this before any flags or cflags settings)
 #===============================================================================
 
-CPPDEFS := $(USER_CPPDEFS) -D$(OS)
+CPPDEFS := $(USER_CPPDEFS) -D$(OS) -Duse_libMPI -Duse_netCDF -DSPMD -D__IFC
 
 # Unless DEBUG mode is enabled, use NDEBUG to turn off assert statements.
 ifneq ($(strip $(DEBUG)),TRUE)
@@ -82,6 +82,9 @@ ifeq (,$(SHAREDPATH))
 endif
 
 include $(CASEROOT)/Macros.make
+
+# autopromotion needed for FMS 
+FFLAGS += $(FC_AUTO_R8)
 
 # Use this if LD has not already been defined.
 ifeq ($(origin LD), default)
@@ -153,22 +156,8 @@ else
   endif
   endif
 endif
-
-
-ifeq ($(MPILIB),mpi-serial)
-	ifdef PNETCDF_PATH
-		undefine PNETCDF_PATH
-	endif
-else
-  ifdef PNETCDF_PATH
-    ifndef $(INC_PNETCDF)
-      INC_PNETCDF:=$(PNETCDF_PATH)/include
-    endif
-    ifndef LIB_PNETCDF
-      LIB_PNETCDF:=$(PNETCDF_PATH)/lib
-    endif
-  endif
-endif
+FFLAGS += -I$(INC_NETCDF)
+CFLAGS += -I$(INC_NETCDF)
 
 # Set HAVE_SLASHPROC on LINUX systems which are not bluegene or Darwin (OSx)
 
@@ -331,10 +320,6 @@ test_esmf: test_esmf.o
 ifeq ($(MPILIB),mpi-serial)
   MPISERIAL = $(INSTALL_SHAREDPATH)/lib/libmpi-serial.a
   MLIBS += $(MPISERIAL)
-  CMAKE_OPTS += -DMPI_C_INCLUDE_PATH=$(INSTALL_SHAREDPATH)/include \
-      -DMPI_Fortran_INCLUDE_PATH=$(INSTALL_SHAREDPATH)/include \
-      -DMPI_C_LIBRARIES=$(INSTALL_SHAREDPATH)/lib/libmpi-serial.a \
-      -DMPI_Fortran_LIBRARIES=$(INSTALL_SHAREDPATH)/lib/libmpi-serial.a
 endif
 
 ifdef INCLUDE_DIR
@@ -347,7 +332,7 @@ else
 endif
 
 .c.o:
-	$(CC) -c $(INCLDIR) $(INCS) $(CFLAGS)  $<
+	$(CC) -c $(INCLDIR) $(INCS) $(CFLAGS) $(CPPDEFS) $<
 .F.o:
 	$(FC) -c $(INCLDIR) $(INCS) $(FFLAGS) $(FIXEDFLAGS) $<
 .f.o:
